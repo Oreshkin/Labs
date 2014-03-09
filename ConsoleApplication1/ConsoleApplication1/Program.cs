@@ -33,7 +33,7 @@ namespace ConsoleApplication1
             {
                 Console.Write(" Введите размер раздела под номером {0}: ", i + 1);
                 var tmp = Convert.ToInt32(Console.ReadLine());
-                _pageList[i] = new Page { FirstAddress = start, Length = tmp };
+                _pageList[i] = new Page { FirstAddress = start, Length = start + tmp };
                 start += tmp;
             }
 
@@ -396,6 +396,33 @@ namespace ConsoleApplication1
                 {
                     Console.Write(" Имя процесса: " + page.CurrentProcess.Name + " Размер: " + page.CurrentProcess.Size + "\n");
                 }
+            }
+
+            // TEST
+            foreach (var page in _pageList)
+            {
+                if (page.CurrentProcess != null)
+                {
+                   for (int i = page.FirstAddress; i < page.Length; i++)
+                   {
+                       Console.ForegroundColor = ConsoleColor.DarkRed;
+                       Console.Write("#");
+                       Console.ForegroundColor = ConsoleColor.Gray;
+                   }
+                }
+                else
+                {
+                    for (int i = page.FirstAddress; i < page.Length; i++)
+                    {
+                        Console.ForegroundColor = ConsoleColor.DarkGreen;
+                        Console.Write("#");
+                        Console.ForegroundColor = ConsoleColor.Gray;
+                    }
+                }
+            }
+            for (int i = _pageList.Last().Length; i < 100; i++)
+            {
+                Console.Write("#");
             }
 
             Console.Write("\n Нажмите любую клавишу для продолжения . . . ");
