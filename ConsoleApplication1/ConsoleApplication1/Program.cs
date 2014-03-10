@@ -37,15 +37,15 @@ namespace ConsoleApplication1
                 start += tmp;
             }
 
-            // Сортировка разделов по возрастаниюа
+            // Сортировка разделов по возрастанию (Исправлено)
             Array.Sort(_pageList, (page, page1) =>
             {
-                if (page.Length
-                    > page1.Length)
+                if (page.Length - page.FirstAddress
+                    > page1.Length - page1.FirstAddress)
                     return 1;
 
-                if (page.Length
-                    < page1.Length)
+                if (page.Length - page.FirstAddress
+                    < page1.Length - page1.FirstAddress)
                     return -1;
 
                 return 0;
@@ -94,13 +94,13 @@ namespace ConsoleApplication1
                     default:
                         Console.WriteLine("\n ERROR: Неверный выбор!");
                         Console.Write("\n Нажмите любую клавишу для продолжения . . . ");
-            Console.ReadKey(true);
+                        Console.ReadKey(true);
                         break;
                 }
             }
         }
 
-        // Автоматическое выделение и освобождение памяти
+        // Автоматическое выделение и освобождение памяти (Исправление не требуется)
         private static void My_random()
         {
             Console.Clear();
@@ -139,7 +139,7 @@ namespace ConsoleApplication1
             Console.ReadKey(true);
         }
 
-        // Последовательное чтение из памяти
+        // Последовательное чтение из памяти (Исправление не требуется)
         private static void Read()
         {
             Console.Clear();
@@ -164,7 +164,7 @@ namespace ConsoleApplication1
             Console.ReadKey(true);
         }
 
-        // Последовательная запись ячее в память
+        // Последовательная запись ячеек памяти (Исправление не требуется)
         private static void Write()
         {
             Console.Clear();
@@ -194,7 +194,7 @@ namespace ConsoleApplication1
             Console.ReadKey(true);
         }
 
-        // Удаление процессов
+        // Удаление процессов (Исправление не требуется)
         private static void Free()
         {
             bool exit = true;
@@ -276,7 +276,7 @@ namespace ConsoleApplication1
             Console.ReadKey(true);
         }
 
-        // Удаления процессов по имени
+        // Удаления процессов по имени (Исправление не требуется)
         private static void FreeAll(string name)
         {
             bool isHandled = false;
@@ -298,7 +298,7 @@ namespace ConsoleApplication1
                 Console.WriteLine("\n ERROR: Такого имени нет!");
         }
 
-        // Удаление процесса и замена на новый процесс из очереди
+        // Удаление процесса и замена на новый процесс из очереди (Исправление не требуется)
         private static void RemoveProcess(Page page)
         {
             page.CurrentProcess = null;
@@ -311,7 +311,7 @@ namespace ConsoleApplication1
             }
         }
 
-        // Метод довавления процесса
+        // Метод довавления процесса (Исправление не требуется)
         private static void Reserve()
         {
             Console.Clear();
@@ -326,12 +326,12 @@ namespace ConsoleApplication1
             Console.ReadKey(true);
         }
 
-        // Выделение памяти
+        // Выделение памяти (Исправлено)
         private static void ReserveMemory(MyProcess process)
         {
             bool isHandled = false;
             ++_request;
-            if (_pageList.Last().Length
+            if (_pageList.Last().Length - _pageList.Last().FirstAddress
                 < process.Size)
             {
                 Console.WriteLine("\n ERROR: Размер процесса больше любого созданного раздела!");
@@ -341,7 +341,7 @@ namespace ConsoleApplication1
             }
             foreach (var page in _pageList)
             {
-                if (page.Length >= process.Size
+                if ((page.Length - page.FirstAddress) >= process.Size
                     && page.CurrentProcess == null)
                 {
                     page.CurrentProcess = process;
@@ -356,7 +356,7 @@ namespace ConsoleApplication1
                 for (int i = 0; i < _pageList.Length; i++)
                 {
                     var page = _pageList[i];
-                    if (page.Length
+                    if (page.Length - page.FirstAddress
                         >= process.Size)
                     {
                         page.Queue.Add(process);
@@ -367,7 +367,7 @@ namespace ConsoleApplication1
             }
         }
 
-        // Метод вывода информации
+        // Метод вывода информации (Исправлено)
         private static void Getstate()
         {
             Console.Clear();
@@ -376,12 +376,12 @@ namespace ConsoleApplication1
             int biggestSection = 0;
             foreach (var page in _pageList)
             {
-                allSection += page.Length;
+                allSection += (page.Length - page.FirstAddress);
                 if (page.CurrentProcess == null)
                 {
-                    freeSection += page.Length;
-                    if (page.Length > biggestSection)
-                        biggestSection = page.Length;
+                    freeSection += (page.Length - page.FirstAddress);
+                    if ((page.Length - page.FirstAddress) > biggestSection)
+                        biggestSection = (page.Length - page.FirstAddress);
                 }
             }
             Console.WriteLine("\n Кол-во всего пам {0}", allSection);
@@ -398,32 +398,37 @@ namespace ConsoleApplication1
                 }
             }
 
+
             // TEST
+            Console.WriteLine("\n Графическое представление занятых ячеек памяти:");
             foreach (var page in _pageList)
             {
+
                 if (page.CurrentProcess != null)
                 {
-                   for (int i = page.FirstAddress; i < page.Length; i++)
-                   {
-                       Console.ForegroundColor = ConsoleColor.DarkRed;
-                       Console.Write("#");
-                       Console.ForegroundColor = ConsoleColor.Gray;
-                   }
+                    Console.ForegroundColor = ConsoleColor.DarkRed;
+                    for (int i = 0; i < page.CurrentProcess.Size; i++)
+                    {
+                        Console.Write("#");
+
+                    }
+                    Console.ForegroundColor = ConsoleColor.Gray;
+                    for (int i = page.CurrentProcess.Size; i < (page.Length - page.FirstAddress); i++)
+                    {
+                        Console.Write("#");
+                    }
                 }
                 else
                 {
+                    Console.ForegroundColor = ConsoleColor.DarkGreen;
                     for (int i = page.FirstAddress; i < page.Length; i++)
                     {
-                        Console.ForegroundColor = ConsoleColor.DarkGreen;
                         Console.Write("#");
-                        Console.ForegroundColor = ConsoleColor.Gray;
                     }
+                    Console.ForegroundColor = ConsoleColor.Gray;
                 }
             }
-            for (int i = _pageList.Last().Length; i < 100; i++)
-            {
-                Console.Write("#");
-            }
+            // TEST
 
             Console.Write("\n Нажмите любую клавишу для продолжения . . . ");
             Console.ReadKey(true);
