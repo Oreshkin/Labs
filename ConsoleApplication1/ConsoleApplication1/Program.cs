@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 
 namespace ConsoleApplication1
 {
@@ -103,18 +105,88 @@ namespace ConsoleApplication1
         // Автоматическое выделение и освобождение памяти (Исправление не требуется)
         private static void My_random()
         {
+            var processList = new List<MyProcess>();
+
+            bool exit = true;
+            while (exit)
+            {
+                Console.Clear();
+                Console.WriteLine("\n Режим работы автоматизации:\n");
+                Console.WriteLine("  1. Random ALL");
+                Console.WriteLine("  2. Чтение из файла");
+                Console.WriteLine("  3. Exit");
+                Console.Write("\n Выберите пункт меню: ");
+
+                var m = Convert.ToInt32(Console.ReadLine());
+                switch (m)
+                {
+                    case 1:
+                        {
+                            Console.Clear();
+                            Console.Write("\n Введите колличество процессов: ");
+                            var k = Convert.ToInt32(Console.ReadLine());
+                            for (int i = 0; i < k; i++)
+                            {
+                                System.Threading.Thread.Sleep(500);
+                                Console.Write("\n Создание {0} процесса", i+1);
+                                var rand = new Random();
+                                var nameR = rand.Next(0, 100000);
+                                var sizeR = rand.Next(0, 100);
+                                var timestartR = rand.Next(0, 10);
+                                var timeworkR = rand.Next(0, 20);
+
+                                processList.Add(new MyProcess { Name = Convert.ToString(nameR), Size = sizeR, Timestart = timestartR, Timework = timeworkR });
+
+                            }
+                            RandomWork(processList);
+                            break;
+                        }
+                    case 2:
+                        {
+                            var reader = new StreamReader("1.txt");
+                            while (true)
+                            {
+                                var s = reader.ReadLine();
+                                if (s == null)
+                                {
+                                    break;
+                                }
+                                var lines = s.Split(new char[] { ' ' });
+                                processList.Add(new MyProcess { Name = lines[0], Size = Convert.ToInt32(lines[1]), Timestart = Convert.ToInt32(lines[2]), Timework = Convert.ToInt32(lines[3]) });
+                            }
+                            RandomWork(processList);
+                            break;
+                        }
+                    case 3:
+                        {
+                            exit = false;
+                            break;
+                        }
+                    default:
+                        {
+                            Console.Clear();
+
+                            Console.WriteLine("\n ERROR: Неверный выбор!");
+
+                            Console.Write("\n Нажмите любую клавишу для продолжения . . . ");
+                            Console.ReadKey(true);
+
+                            break;
+                        }
+                }
+            }
+
+        }
+
+        // Алгоритм атмоматизации выделения памяти и выгрузки процесса
+        public static void RandomWork(List<MyProcess> processes)
+        {
             Console.Clear();
-            //var processList = new List<MyProcess>();
-            var processList = new List<MyProcess>
-            { 
-                new MyProcess { Name = "1", Size = 50, Timestart = 5, Timework = 5 },
-                new MyProcess { Name = "2", Size = 50, Timestart = 0, Timework = 5 },
-            };
 
             Console.WriteLine("\n Начинаем!");
 
             var maxtime = 0;
-            foreach (var myProcess in processList)
+            foreach (var myProcess in processes)
             {
                 var tmp = myProcess.Timestart + myProcess.Timework;
                 if (tmp > maxtime)
@@ -123,9 +195,9 @@ namespace ConsoleApplication1
 
             for (int i = 0; i <= maxtime; i++)
             {
-                System.Threading.Thread.Sleep(1000);
+                System.Threading.Thread.Sleep(500);
                 Console.WriteLine("  Цикл № {0}", i);
-                foreach (var myProcess in processList)
+                foreach (var myProcess in processes)
                 {
                     if (myProcess.Timestart == i)
                     {
@@ -259,7 +331,7 @@ namespace ConsoleApplication1
                             exit = false;
                             break;
                         }
-                    default:
+                   default:
                         {
                             Console.Clear();
 
@@ -322,6 +394,7 @@ namespace ConsoleApplication1
             var process = new MyProcess { Name = name, Size = size };
 
             ReserveMemory(process);
+
             Console.Write("\n Нажмите любую клавишу для продолжения . . . ");
             Console.ReadKey(true);
         }
@@ -392,25 +465,40 @@ namespace ConsoleApplication1
             Console.WriteLine("\n Список текущих процессов:");
             foreach (var page in _pageList)
             {
+                if (allSection == freeSection)
+                {
+                    Console.WriteLine(" Текущих процессов нет!");
+                    break;
+                }
                 if (page.CurrentProcess != null)
                 {
-                    Console.Write(" Имя процесса: " + page.CurrentProcess.Name + " Размер: " + page.CurrentProcess.Size + "\n");
+                    Console.Write(" Имя процесса: " + page.CurrentProcess.Name + " Размер процесса: " + page.CurrentProcess.Size + " Размер раздела: " + (page.Length - page.FirstAddress) + "\n");
                 }
             }
 
 
             // TEST
             Console.WriteLine("\n Графическое представление занятых ячеек памяти:");
+            Console.WriteLine("\n Обозначения:");
+            Console.WriteLine(" | - Графическое разделение памяти на разделы");
+            Console.WriteLine(" Серый - ячейка пямяти не задействована процессом");
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.Write(" Красный");
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.Write(" - ячейка пямяти задействована процессом\n");
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.Write(" Зелёный");
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.Write(" - ячейка (раздел) пямяти свободнана\n\n");
+
             foreach (var page in _pageList)
             {
-
                 if (page.CurrentProcess != null)
                 {
-                    Console.ForegroundColor = ConsoleColor.DarkRed;
+                    Console.ForegroundColor = ConsoleColor.Red;
                     for (int i = 0; i < page.CurrentProcess.Size; i++)
                     {
                         Console.Write("#");
-
                     }
                     Console.ForegroundColor = ConsoleColor.Gray;
                     for (int i = page.CurrentProcess.Size; i < (page.Length - page.FirstAddress); i++)
@@ -420,17 +508,18 @@ namespace ConsoleApplication1
                 }
                 else
                 {
-                    Console.ForegroundColor = ConsoleColor.DarkGreen;
+                    Console.ForegroundColor = ConsoleColor.Green;
                     for (int i = page.FirstAddress; i < page.Length; i++)
                     {
                         Console.Write("#");
                     }
                     Console.ForegroundColor = ConsoleColor.Gray;
                 }
+                Console.Write("|");
             }
             // TEST
 
-            Console.Write("\n Нажмите любую клавишу для продолжения . . . ");
+            Console.Write("\n\n Нажмите любую клавишу для продолжения . . . ");
             Console.ReadKey(true);
         }
     }
