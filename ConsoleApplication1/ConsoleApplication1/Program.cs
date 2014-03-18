@@ -7,8 +7,8 @@ namespace ConsoleApplication1
 {
     internal class Program
     {
-        private static int _request;
-        private static int _requestOk;
+        private static float _request;
+        private static float _requestOk;
         // ReSharper disable once FieldCanBeMadeReadOnly.Local
         private static byte[] _memory = new byte[60000];
         private static Page[] _pageList;
@@ -20,16 +20,13 @@ namespace ConsoleApplication1
             bool exit = true;
             // Переменная начало памяти
             var start = 0;
-
             // Ввод начальных данных (Кол-во разделов и их размер)
             Console.WriteLine("\n Ввод начальных данных\n");
             Console.Write(" Введите ко-во страниц: ");
             var k = Convert.ToInt32(Console.ReadLine());
             Console.Write("\n");
-
             // Создаем массив k разделов
             _pageList = new Page[k];
-
             // Ввод размера страниц
             for (var i = 0; i < k; i++)
             {
@@ -38,21 +35,18 @@ namespace ConsoleApplication1
                 _pageList[i] = new Page { FirstAddress = start, Length = start + tmp };
                 start += tmp;
             }
-
             // Сортировка разделов по возрастанию (Исправлено)
             Array.Sort(_pageList, (page, page1) =>
             {
                 if (page.Length - page.FirstAddress
                     > page1.Length - page1.FirstAddress)
                     return 1;
-
                 if (page.Length - page.FirstAddress
                     < page1.Length - page1.FirstAddress)
                     return -1;
 
                 return 0;
             });
-
             // Главное меню
             while (exit)
             {
@@ -67,7 +61,6 @@ namespace ConsoleApplication1
                 Console.WriteLine("  6. Random");
                 Console.WriteLine("  7. Exit");
                 Console.Write("\n Выберите пункт меню: ");
-
                 // Выбор пункта
                 var m = Convert.ToInt32(Console.ReadLine());
                 switch (m)
@@ -106,7 +99,6 @@ namespace ConsoleApplication1
         private static void My_random()
         {
             var processList = new List<MyProcess>();
-
             bool exit = true;
             while (exit)
             {
@@ -116,7 +108,6 @@ namespace ConsoleApplication1
                 Console.WriteLine("  2. Чтение из файла");
                 Console.WriteLine("  3. Exit");
                 Console.Write("\n Выберите пункт меню: ");
-
                 var m = Convert.ToInt32(Console.ReadLine());
                 switch (m)
                 {
@@ -128,16 +119,13 @@ namespace ConsoleApplication1
                             for (int i = 0; i < k; i++)
                             {
                                 System.Threading.Thread.Sleep(500);
-                                Console.Write("\n Создание {0} процесса", i+1);
+                                Console.Write("\n Создание {0} процесса", i + 1);
                                 var rand = new Random();
                                 var nameR = rand.Next(0, 1000);
                                 var sizeR = rand.Next(0, 100);
                                 var timestartR = rand.Next(0, 20);
                                 var timeworkR = rand.Next(0, 20);
-
                                 processList.Add(new MyProcess { Name = Convert.ToString(nameR), Size = sizeR, Timestart = timestartR, Timework = timeworkR });
-
-                            
                             }
                             RandomWork(processList);
                             break;
@@ -149,9 +137,7 @@ namespace ConsoleApplication1
                             {
                                 var s = reader.ReadLine();
                                 if (s == null)
-                                {
                                     break;
-                                }
                                 var lines = s.Split(new[] { ' ' });
                                 processList.Add(new MyProcess { Name = lines[0], Size = Convert.ToInt32(lines[1]), Timestart = Convert.ToInt32(lines[2]), Timework = Convert.ToInt32(lines[3]) });
                             }
@@ -167,12 +153,9 @@ namespace ConsoleApplication1
                     default:
                         {
                             Console.Clear();
-
                             Console.WriteLine("\n ERROR: Неверный выбор!");
-
                             Console.Write("\n Нажмите любую клавишу для продолжения . . . ");
                             Console.ReadKey(true);
-
                             break;
                         }
                 }
@@ -184,9 +167,7 @@ namespace ConsoleApplication1
         public static void RandomWork(List<MyProcess> processes)
         {
             Console.Clear();
-
             Console.WriteLine("\n Начинаем!");
-
             var maxtime = 0;
             foreach (var myProcess in processes)
             {
@@ -194,7 +175,6 @@ namespace ConsoleApplication1
                 if (tmp > maxtime)
                     maxtime = tmp;
             }
-
             for (var i = 0; i <= maxtime; i++)
             {
                 System.Threading.Thread.Sleep(500);
@@ -202,9 +182,7 @@ namespace ConsoleApplication1
                 foreach (var myProcess in processes)
                 {
                     if (myProcess.Timestart == i)
-                    {
                         ReserveMemory(myProcess);
-                    }
                     if (myProcess.Timestart + myProcess.Timework == i)
                         FreeAll(myProcess.Name);
                 }
@@ -223,15 +201,12 @@ namespace ConsoleApplication1
             var ofseat = Convert.ToInt32(Console.ReadLine());
             Console.Write("\n Колличество считываемых элементов: ");
             var len = Convert.ToInt32(Console.ReadLine());
-
             var page = _pageList[number - 1];
             var tmp = page.FirstAddress + ofseat;
-
             Console.WriteLine("\n Список адресов ячеек и данных в них:\n");
             for (int i = 0; i < len; i++)
             {
                 var adr = tmp + i;
-
                 Console.Write("  Адресс: {0} Содержимое: {1}\n", adr, _memory[adr]);
             }
             Console.Write("\n Нажмите любую клавишу для продолжения . . . ");
@@ -252,17 +227,13 @@ namespace ConsoleApplication1
                 var value = Convert.ToByte(Console.ReadLine());
                 input[i] = value;
             }
-
             Console.Write("\n Номер раздела: ");
             var number = Convert.ToInt32(Console.ReadLine());
             Console.Write("\n Смещение: ");
             var ofseat = Convert.ToInt32(Console.ReadLine());
-
             var page = _pageList[number - 1];
             var tmp = page.FirstAddress + ofseat;
-
             Array.Copy(input, 0, _memory, tmp, input.Length);
-
             Console.Write("\n MES: Запись элементов выполнена!\n");
             Console.Write("\n Нажмите любую клавишу для продолжения . . . ");
             Console.ReadKey(true);
@@ -281,51 +252,36 @@ namespace ConsoleApplication1
                 Console.WriteLine("  3. Очистить все разделы");
                 Console.WriteLine("  4. Exit");
                 Console.Write("\n Выберите пункт меню: ");
-
                 var m = Convert.ToInt32(Console.ReadLine());
                 switch (m)
                 {
                     case 1:
                         {
                             Console.Clear();
-
                             Console.Write("\n Ввести имя процесса: ");
                             var name = Console.ReadLine();
-
                             FreeAll(name);
-
                             exit = false;
-
                             break;
                         }
                     case 2:
                         {
                             Console.Clear();
-
                             Console.Write("\n Ввести номер раздела: ");
                             var number = Convert.ToInt32(Console.ReadLine());
-
                             var page = _pageList[number - 1];
-
                             RemoveProcess(page);
-
                             Console.WriteLine("\n MES: Удалиние выполнено!");
-
                             exit = false;
-
                             break;
                         }
                     case 3:
                         {
                             Console.Clear();
-
                             foreach (var page in _pageList)
                                 RemoveProcess(page);
-
                             Console.WriteLine("\n MES: Удалиние выполнено!");
-
                             exit = false;
-
                             break;
                         }
                     case 4:
@@ -333,15 +289,12 @@ namespace ConsoleApplication1
                             exit = false;
                             break;
                         }
-                   default:
+                    default:
                         {
                             Console.Clear();
-
                             Console.WriteLine("\n ERROR: Неверный выбор!");
-
                             Console.Write("\n Нажмите любую клавишу для продолжения . . . ");
                             Console.ReadKey(true);
-
                             break;
                         }
                 }
@@ -361,13 +314,10 @@ namespace ConsoleApplication1
                 {
                     isHandled = true;
                     Console.WriteLine("\n MES: Удаление выполнено!");
-
                     RemoveProcess(page);
-
                     break;
                 }
             }
-
             if (isHandled != true)
                 Console.WriteLine("\n ERROR: Такого имени нет!");
         }
@@ -394,9 +344,7 @@ namespace ConsoleApplication1
             Console.Write("\n Ввести размер: ");
             var size = Convert.ToInt32(Console.ReadLine());
             var process = new MyProcess { Name = name, Size = size };
-
             ReserveMemory(process);
-
             Console.Write("\n Нажмите любую клавишу для продолжения . . . ");
             Console.ReadKey(true);
         }
@@ -457,11 +405,16 @@ namespace ConsoleApplication1
                         biggestSection = (page.Length - page.FirstAddress);
                 }
             }
+            float procent;
+            if (Math.Abs(_request) <= 0)
+                procent = 0;
+            else
+                procent = (_requestOk / _request) * 100;
             Console.WriteLine("\n Кол-во всего пам {0}", allSection);
             Console.WriteLine(" Кол-во свободной пам {0}", freeSection);
             Console.WriteLine(" Самый большой свободный {0}", biggestSection);
             Console.WriteLine(" Количество запросов на выделение памяти {0}", _request);
-            Console.WriteLine(" Количество OK запросов на выделение памяти {0}", _requestOk);
+            Console.WriteLine(" Количество OK запросов на выделение памяти {0} ({1:0}%)", _requestOk, procent);
             Console.WriteLine("\n Список текущих процессов:");
             foreach (var page in _pageList)
             {
@@ -471,11 +424,8 @@ namespace ConsoleApplication1
                     break;
                 }
                 if (page.CurrentProcess != null)
-                {
                     Console.Write(" Имя процесса: " + page.CurrentProcess.Name + " Размер процесса: " + page.CurrentProcess.Size + " Размер раздела: " + (page.Length - page.FirstAddress) + "\n");
-                }
             }
-
             Console.WriteLine("\n Графическое представление занятых ячеек памяти:");
             Console.WriteLine("\n Обозначения:");
             Console.WriteLine(" | - Графическое разделение памяти на разделы");
@@ -488,29 +438,22 @@ namespace ConsoleApplication1
             Console.Write(" Зелёный");
             Console.ForegroundColor = ConsoleColor.Gray;
             Console.Write(" - ячейка (раздел) пямяти свободнана\n\n");
-
             foreach (var page in _pageList)
             {
                 if (page.CurrentProcess != null)
                 {
                     Console.ForegroundColor = ConsoleColor.Red;
                     for (int i = 0; i < page.CurrentProcess.Size; i++)
-                    {
                         Console.Write("#");
-                    }
                     Console.ForegroundColor = ConsoleColor.Gray;
                     for (int i = page.CurrentProcess.Size; i < (page.Length - page.FirstAddress); i++)
-                    {
                         Console.Write("#");
-                    }
                 }
                 else
                 {
                     Console.ForegroundColor = ConsoleColor.Green;
                     for (int i = page.FirstAddress; i < page.Length; i++)
-                    {
                         Console.Write("#");
-                    }
                     Console.ForegroundColor = ConsoleColor.Gray;
                 }
                 Console.Write("|");
