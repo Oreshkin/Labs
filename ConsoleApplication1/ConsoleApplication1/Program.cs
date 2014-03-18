@@ -187,6 +187,9 @@ namespace ConsoleApplication1
                         FreeAll(myProcess.Name);
                 }
             }
+            CleanMemory();
+            foreach (var page in _pageList)
+                RemoveProcess(page);
             Console.Write("\n Нажмите любую клавишу для продолжения . . . ");
             Console.ReadKey(true);
         }
@@ -349,6 +352,13 @@ namespace ConsoleApplication1
             Console.ReadKey(true);
         }
 
+        // Очистка всех очередей
+        private static void CleanMemory()
+        {
+            foreach (var page in _pageList)
+                page.Queue.Clear();
+        }
+
         // Выделение памяти (Исправлено)
         private static void ReserveMemory(MyProcess process)
         {
@@ -368,7 +378,7 @@ namespace ConsoleApplication1
                     page.CurrentProcess = process;
                     isHandled = true;
                     ++_requestOk;
-                    Console.WriteLine("\n MES: Процессу выделена память");
+                    Console.WriteLine("\n MES: Процессу выделена память. Время работы: {0}", page.CurrentProcess.Timework );
                     break;
                 }
             }
@@ -424,7 +434,7 @@ namespace ConsoleApplication1
                     break;
                 }
                 if (page.CurrentProcess != null)
-                    Console.Write(" Имя процесса: " + page.CurrentProcess.Name + " Размер процесса: " + page.CurrentProcess.Size + " Размер раздела: " + (page.Length - page.FirstAddress) + "\n");
+                    Console.Write(" Имя процесса: " + page.CurrentProcess.Name + " Размер процесса: " + page.CurrentProcess.Size + " Время работы: " + page.CurrentProcess.Timework + " Размер раздела: " + (page.Length - page.FirstAddress) + "\n");
             }
             Console.WriteLine("\n Графическое представление занятых ячеек памяти:");
             Console.WriteLine("\n Обозначения:");
