@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
 
 namespace ConsoleApplication1
 {
@@ -10,6 +9,7 @@ namespace ConsoleApplication1
     {
         private static int _request;
         private static int _requestOk;
+        // ReSharper disable once FieldCanBeMadeReadOnly.Local
         private static byte[] _memory = new byte[60000];
         private static Page[] _pageList;
 
@@ -130,20 +130,21 @@ namespace ConsoleApplication1
                                 System.Threading.Thread.Sleep(500);
                                 Console.Write("\n Создание {0} процесса", i+1);
                                 var rand = new Random();
-                                var nameR = rand.Next(0, 100000);
+                                var nameR = rand.Next(0, 1000);
                                 var sizeR = rand.Next(0, 100);
-                                var timestartR = rand.Next(0, 10);
+                                var timestartR = rand.Next(0, 20);
                                 var timeworkR = rand.Next(0, 20);
 
                                 processList.Add(new MyProcess { Name = Convert.ToString(nameR), Size = sizeR, Timestart = timestartR, Timework = timeworkR });
 
+                            
                             }
                             RandomWork(processList);
                             break;
                         }
                     case 2:
                         {
-                            var reader = new StreamReader("1.txt");
+                            var reader = new StreamReader("process_list.txt");
                             while (true)
                             {
                                 var s = reader.ReadLine();
@@ -151,9 +152,10 @@ namespace ConsoleApplication1
                                 {
                                     break;
                                 }
-                                var lines = s.Split(new char[] { ' ' });
+                                var lines = s.Split(new[] { ' ' });
                                 processList.Add(new MyProcess { Name = lines[0], Size = Convert.ToInt32(lines[1]), Timestart = Convert.ToInt32(lines[2]), Timework = Convert.ToInt32(lines[3]) });
                             }
+                            reader.Close();
                             RandomWork(processList);
                             break;
                         }
@@ -193,7 +195,7 @@ namespace ConsoleApplication1
                     maxtime = tmp;
             }
 
-            for (int i = 0; i <= maxtime; i++)
+            for (var i = 0; i <= maxtime; i++)
             {
                 System.Threading.Thread.Sleep(500);
                 Console.WriteLine("  Цикл № {0}", i);
@@ -408,8 +410,6 @@ namespace ConsoleApplication1
                 < process.Size)
             {
                 Console.WriteLine("\n ERROR: Размер процесса больше любого созданного раздела!");
-                Console.Write("\n Нажмите любую клавишу для продолжения . . . ");
-                Console.ReadKey(true);
                 return;
             }
             foreach (var page in _pageList)
@@ -476,8 +476,6 @@ namespace ConsoleApplication1
                 }
             }
 
-
-            // TEST
             Console.WriteLine("\n Графическое представление занятых ячеек памяти:");
             Console.WriteLine("\n Обозначения:");
             Console.WriteLine(" | - Графическое разделение памяти на разделы");
@@ -517,7 +515,6 @@ namespace ConsoleApplication1
                 }
                 Console.Write("|");
             }
-            // TEST
 
             Console.Write("\n\n Нажмите любую клавишу для продолжения . . . ");
             Console.ReadKey(true);
