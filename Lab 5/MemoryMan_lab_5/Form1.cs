@@ -16,7 +16,7 @@ namespace MemoryMan_lab_5
         private string end_adress; //логический адрес конца раздела
         private int size; //Размер раздела
         public byte[] memory;
-        // private System.Windows.Forms.Timer TimeCounter;
+        private System.Windows.Forms.Timer TimeCounter;
         private Process Proc; //Процесс, который сейчас загружен в раздел
         private Queue<Process> Ochered; //Очередь процессов для раздела
         private Form1 form; //ссылка на форму
@@ -32,7 +32,7 @@ namespace MemoryMan_lab_5
             AllowToWork = true;
             this.Proc = null; //Инициализируем текущий процесс нулевой ссылкой
             Ochered = new Queue<Process>(); //Инициализируем очередь процессов
-            // TimeCounter = new System.Windows.Forms.Timer();
+            TimeCounter = new System.Windows.Forms.Timer();
             this.form = form;
             string[] adresArr = adress.Split('-'); //Инициализируем поля адресов
             start_adress = adresArr[0]; //адрес начала
