@@ -8,7 +8,6 @@ using System.Windows.Forms.VisualStyles;
 
 namespace MemoryMan_lab_5
 {
-
     public struct Part
     {
         private string name;
@@ -16,7 +15,7 @@ namespace MemoryMan_lab_5
         private string end_adress; //логический адрес конца раздела
         private int size; //Размер раздела
         public byte[] memory;
-        private System.Windows.Forms.Timer TimeCounter;
+        private ITimer TimeCounter;
         private Process Proc; //Процесс, который сейчас загружен в раздел
         private Queue<Process> Ochered; //Очередь процессов для раздела
         private Form1 form; //ссылка на форму
@@ -32,14 +31,21 @@ namespace MemoryMan_lab_5
             AllowToWork = true;
             this.Proc = null; //Инициализируем текущий процесс нулевой ссылкой
             Ochered = new Queue<Process>(); //Инициализируем очередь процессов
-            TimeCounter = new System.Windows.Forms.Timer();
+
+#if false
+            TimeCounter = new TimerWrapper();
+#else
+            TimeCounter = ClickTimer.CreateTimer();
+#endif
+
             this.form = form;
             string[] adresArr = adress.Split('-'); //Инициализируем поля адресов
             start_adress = adresArr[0]; //адрес начала
             end_adress = adresArr[1]; //адрес конца
             ProcessAdd = new EventHandler(form.OnProcessAdd);
             ProcessChange = new EventHandler(form.OnCurrentProcChange);
-            TimeCounter.Tick += new EventHandler(TimeCounter_Tick);
+            //TimeCounter.Tick += new EventHandler(TimeCounter_Tick);
+            TimeCounter.SetAction( TimeCounter_Tick);
         }
 
         public bool TimerState
@@ -54,7 +60,8 @@ namespace MemoryMan_lab_5
             set { AllowToWork = value; }
         }
 
-        public void TimeCounter_Tick(object sender, EventArgs e)
+        //public void TimeCounter_Tick(object sender, EventArgs e)
+        public void TimeCounter_Tick( int t )
         {
             if (Ochered.Count != 0 && AllowToWork)
             {
@@ -427,7 +434,8 @@ namespace MemoryMan_lab_5
 
         private void button8_Click(object sender, EventArgs e)
         {
-
+            var i = ClickTimer.Next();
+            button8.Text = @"next (" + i + @")";
         }
     }
 }
