@@ -45,7 +45,7 @@ namespace MemoryMan_lab_5
             ProcessAdd = new EventHandler(form.OnProcessAdd);
             ProcessChange = new EventHandler(form.OnCurrentProcChange);
             //TimeCounter.Tick += new EventHandler(TimeCounter_Tick);
-            TimeCounter.SetAction( TimeCounter_Tick);
+            TimeCounter.SetAction(TimeCounter_Tick);
         }
 
         public bool TimerState
@@ -61,7 +61,7 @@ namespace MemoryMan_lab_5
         }
 
         //public void TimeCounter_Tick(object sender, EventArgs e)
-        public void TimeCounter_Tick( int t )
+        public void TimeCounter_Tick(int t)
         {
             if (Ochered.Count != 0 && AllowToWork)
             {
