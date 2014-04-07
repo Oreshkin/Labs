@@ -7,26 +7,26 @@ namespace MemoryMan_lab_5
     {
         private const int TickSize = 1000;
 
-        private static readonly List<ClickTimer> Timers = new List<ClickTimer>();
-        private static int _counter;
+        private static readonly List<ClickTimer> Timers = new List<ClickTimer>(); // список всех таймеров
+        private static int _counter; // показ на кнопке
 
-        private Action<int> _a;
+        private Action<int> _a; // DOT.net 2.0 нет делегата без параметра
         private int _interval;
         private int _curInterval;
 
-        public static ITimer CreateTimer()
+        public static ITimer CreateTimer() // создание таймера
         {
             var t = new ClickTimer();
             Timers.Add(t);
             return t;
         }
 
-        public static int Next()
+        public static int Next() // вызов с кнопки увеличение на 1000
         {
             foreach (var clickTimer in Timers)
                 clickTimer.DoNext();
 
-            _counter += TickSize;
+            _counter += 1; // на кнопке
             return _counter;
         }
 
@@ -35,9 +35,9 @@ namespace MemoryMan_lab_5
             _a = a;
         }
 
-        public bool Enabled { get; set; }
+        public bool Enabled { get; set; } // елили false nj dct
 
-        public int Interval
+        public int Interval // при установке нового сбрасываем текуший
         {
             get { return _interval; }
             set
@@ -47,7 +47,7 @@ namespace MemoryMan_lab_5
             }
         }
 
-        private void DoNext()
+        private void DoNext() // если ьекущий достигает заданного то сбрасывается
         {
             if (!Enabled)
                 return;
