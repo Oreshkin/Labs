@@ -10,7 +10,6 @@ namespace MemoryMan_lab_5
 {
     public struct Part
     {
-        public static bool IsTypeTimer;
         private string name;
         private string start_adress; //логический адрес начала раздела
         private string end_adress; //логический адрес конца раздела
@@ -33,14 +32,11 @@ namespace MemoryMan_lab_5
             this.Proc = null; //Инициализируем текущий процесс нулевой ссылкой
             Ochered = new Queue<Process>(); //Инициализируем очередь процессов
 
-            if (IsTypeTimer)
-            {
-                TimeCounter = new TimerWrapper();
-            }
-            else
-            {
-                TimeCounter = ClickTimer.CreateTimer();
-            }
+#if false
+            TimeCounter = new TimerWrapper();
+#else
+            TimeCounter = ClickTimer.CreateTimer();
+#endif
 
             this.form = form;
             string[] adresArr = adress.Split('-'); //Инициализируем поля адресов
@@ -181,7 +177,7 @@ namespace MemoryMan_lab_5
 
     public partial class Form1 : Form
     {
-        private Settings _s; //форма настроек
+        private settings _s; //форма настроек
         private MemStat _memStatistics; //поле- статистика памяти
         public Part[] Parts; //массив разделов
         private NewProcess _procss; //форма для создания процесса
@@ -195,7 +191,7 @@ namespace MemoryMan_lab_5
         private void Form1_Load(object sender, EventArgs e)
         {
             //Обработчик события, когда форма загружается
-            _s = new Settings(); //Создаём экземпляр окна настроек
+            _s = new settings(); //Создаём экземпляр окна настроек
             if (_s.ShowDialog() == DialogResult.OK) //если в окне настроек нажали ок
             {
                 Parts = _s.GetMemStruct; //Передаём строку со структурой разделов из формы настроек
@@ -439,12 +435,7 @@ namespace MemoryMan_lab_5
         private void button8_Click(object sender, EventArgs e)
         {
             var i = ClickTimer.Next();
-            button8.Text = @"Цикл (" + i + @")";
-        }
-
-        private void richTextBox1_TextChanged(object sender, EventArgs e)
-        {
-
+            button8.Text = @"next (" + i + @")";
         }
     }
 }
