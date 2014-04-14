@@ -7,49 +7,81 @@ namespace ConsoleApplication1
 {
     internal class Program
     {
+        /// <summary>
+        /// Размер страницы
+        /// </summary>
         private static int _sizePage;
+        /// <summary>
+        /// Размер виртуальной памяти
+        /// </summary>
         private static int _sizeVp;
+        /// <summary>
+        /// Переменная для сохранения начального значения виртуальной памяти
+        /// </summary>
         private static int _sizeVpOr;
+        /// <summary>
+        /// Количество свободных страниц
+        /// </summary>
+        private static int _numberCp;
+        /// <summary>
+        /// Количество страниц для ФП
+        /// </summary>
         private static int _k;
+        /// <summary>
+        /// ФП
+        /// </summary>
         private static byte[] _memory;
+        /// <summary>
+        /// Список страниц
+        /// </summary>
         private static Page[] _pageList;
+        /// <summary>
+        /// Очередь процессов
+        /// </summary>
         private static readonly Queue<MyProcess> ProcessList = new Queue<MyProcess>();
+        /// <summary>
+        /// История обращения к памяти (fifo)
+        /// </summary>
         private static readonly List<MyProcess> HistoriList = new List<MyProcess>();
+        /// <summary>
+        /// ВП
+        /// </summary>
         private static readonly List<MyProcess> VirtualMemoryList = new List<MyProcess>();
-
+        ///
         private static void Main()
         {
+            Console.Title = "Лабораторная работа № 9 ОС Вариант 2 (Бобр Г.В)";
             bool exit = true;
             int start = 0;
             Console.WriteLine("\n Ввод начальных данных\n");
-            Console.Write(" Введите ко-во памяти 2^: ");
+            Console.Write(" Введите количество памяти 2^: ");
             var nm = Convert.ToInt32(Console.ReadLine());
-            _memory = new byte[(int) Math.Pow(2, nm)];
-            Console.Write("\n Введите ко-во страниц: ");
+            _memory = new byte[(int)Math.Pow(2, nm)];
+            Console.Write("\n Введите количество страниц: ");
             _k = Convert.ToInt32(Console.ReadLine());
             _pageList = new Page[_k];
-            _sizePage = Convert.ToInt32(Math.Pow(2, nm)/ _k);
+            _sizePage = Convert.ToInt32(Math.Pow(2, nm) / _k);
             for (var i = 0; i < _k; i++)
             {
                 _pageList[i] = new Page { FirstAddress = start, Length = start + _sizePage };
                 start += _sizePage;
             }
-
-            Console.Write("\n Введите ко-во виртуальной памяти 2^: ");
+            Console.Write("\n Введите количество виртуальной памяти 2^: ");
             var vm = Convert.ToInt32(Console.ReadLine());
             _sizeVpOr = vm;
             _sizeVp = Convert.ToInt32(Math.Pow(2, vm) / _pageList[0].Length);
-
             while (exit)
             {
+                Console.Title = "Главное меню";
                 Console.Clear();
                 Info();
-                Console.WriteLine("\n Главное Меню:\n");
+                Console.WriteLine("\n\t\tГлавное Меню:\n");
                 Console.WriteLine("  1. Чтение с файла");
                 Console.WriteLine("  2. Запуск");
                 Console.WriteLine("  3. Удаление");
-                Console.WriteLine("  4. Добовление процесса");
-                Console.WriteLine("  5. Exit");
+                Console.WriteLine("  4. Полный сброс");
+                Console.WriteLine("  5. Добавление процесса");
+                Console.WriteLine("  6. Exit");
                 Console.Write("\n Выберите пункт меню: ");
                 var m = Convert.ToInt32(Console.ReadLine());
                 switch (m)
@@ -64,9 +96,12 @@ namespace ConsoleApplication1
                         Delete();
                         break;
                     case 4:
-                        AddProcess();
+                        Reset();
                         break;
                     case 5:
+                        AddProcess();
+                        break;
+                    case 6:
                         exit = false;
                         break;
                     default:
@@ -77,8 +112,22 @@ namespace ConsoleApplication1
             }
         }
 
+        private static void Reset()
+        {
+            foreach (var page in _pageList)
+            {
+                page.CurrentProcess = null;
+                page.Сounter = 0;
+            }
+            ProcessList.Clear();
+            VirtualMemoryList.Clear();
+            _sizeVp = Convert.ToInt32(Math.Pow(2, _sizeVpOr) / _pageList[0].Length);
+            HistoriList.Clear();
+        }
+
         private static void AddProcess()
         {
+            Console.Title = "Добавление процесса";
             Console.Clear();
             Console.WriteLine("\n Введите имя:");
             var name = Console.ReadLine();
@@ -97,12 +146,13 @@ namespace ConsoleApplication1
                 VirtualMemoryList.Add(new MyProcess { Name = name, NumberBlock = i + 1 });
             if (rest != 0)
                 VirtualMemoryList.Add(new MyProcess { Name = name, NumberBlock = i + 1 });
-            Console.WriteLine(" Процесс {0} добавлен и разбит на {1} страницы из них {2} по {3}, и 1 блок размерои {4}", name, fullsize + 1, fullsize, _sizePage, rest);
+            Console.WriteLine(" Процесс {0} добавлен и разбит на {1} страницы из них {2} по {3}, и 1 страницу размером {4}", name, fullsize + 1, fullsize, _sizePage, rest);
             Pause();
         }
 
         private static void Delete()
         {
+            Console.Title = "Удаление";
             bool exit = true;
             while (exit)
             {
@@ -184,7 +234,6 @@ namespace ConsoleApplication1
                                     i--;
                                 }
                             }
-
                             var tmpHl = HistoriList.Count;
                             for (int i = 0; i < tmpHl; i++)
                             {
@@ -201,6 +250,7 @@ namespace ConsoleApplication1
                         {
                             foreach (var page in _pageList)
                                 page.CurrentProcess = null;
+                            ProcessList.Clear();
                             VirtualMemoryList.Clear();
                             HistoriList.Clear();
                             _sizeVp = Convert.ToInt32(Math.Pow(2, _sizeVpOr) / _pageList[0].Length);
@@ -213,44 +263,81 @@ namespace ConsoleApplication1
                         Console.WriteLine("\n ERROR: Неверный выбор!");
                         Pause();
                         break;
-
                 }
             }
         }
-
+        /// <summary>
+        /// Эмуляция работы 
+        /// </summary>
         private static void Start()
         {
-
+            Console.Title = "Эмуляция Online";
             var rand = new Random();
-            while (ProcessList.Count != 0)
+            while (ProcessList.Count != 0) // Пока процессы есть в списке
             {
-                var process = ProcessList.Dequeue();
-                var block = process.NumberBlock;
-
-                int numberCp = 0;
-                foreach (var page in _pageList)
-                    if (page.CurrentProcess == null)
-                        numberCp += 1;
-
-                for (int j = 1; j <= block; j++)
+                var process = ProcessList.Dequeue(); // Берет первый процесс
+                var block = process.NumberBlock; // Берет количество страниц (время работы)
+                int timeWorkWhile = 0;
+                while (timeWorkWhile != process.TimeWork)
                 {
-                    var numberPage = rand.Next(0, _k-1);
-                    _pageList[numberPage].Сounter += 1;
-                    if (numberCp <= _k && numberCp != 0)
+                    int blockR = 0; // Номер рандомной страницы процесса
+                    int numberPage = 0; // Номер рандомной страницы процесса в ВП 
+                    bool exit = true;
+
+                    foreach (var myProcess in VirtualMemoryList) // Перебор всех страниц в ВП
                     {
-                        if (_pageList[numberPage].CurrentProcess == null)
+                        if (myProcess.Name == process.Name) // Проверка есть ли в ВП хотя бы одна страница просесса 
                         {
-                            int nvm = VirtualMemoryList.Count;
-                            for (int i = 0; i < nvm; i++)
-                            {
-                                if (VirtualMemoryList[i].Name == process.Name && VirtualMemoryList[i].NumberBlock == j)
+                            while (exit) // Пока мы не сгенерим нужную страницу
+                            { 
+                                var tmp = rand.Next(1, block + 1); // Генерация номера страницы
+                                int nvm = VirtualMemoryList.Count; // Узнаём количество страниц в ВП 
+                                for (int i = 0; i < nvm; i++) // Ищет в ВП памяти страницу процесса
                                 {
-                                    _pageList[numberPage].CurrentProcess = VirtualMemoryList[i];
-                                    HistoriList.Add(VirtualMemoryList[i]);
-                                    VirtualMemoryList.Remove(VirtualMemoryList[i]);
-                                    _sizeVp += 1;
+                                    if (VirtualMemoryList[i].Name == process.Name &&
+                                        VirtualMemoryList[i].NumberBlock == tmp) // Если имя и намер страницы есть
+                                    {
+                                        blockR = tmp; // Сохраняем номер страницы
+                                        numberPage = i; // Сохраняем местоположение найденой страницы в ВП
+                                        exit = false; // Выходим поиска
+                                        break; // Прерываем цикл for
+                                    }
+                                }
+                            }
+                            break; // После генерации нужной страницы выходим из проверки
+                        }
+                    }
+
+                    if (blockR == 0 && numberPage == 0) // Если в ВП нет не одной страницы с именем процесса
+                    {
+                        var tmp = rand.Next(1, block + 1); // Генерим случайную страницу процесса
+                        foreach (var page in _pageList) // Перебираем страницы ФП
+                        {
+                            if (page.CurrentProcess.Name == process.Name && page.CurrentProcess.NumberBlock == tmp) // Находим нужную страницу
+                            {
+                                page.Сounter += 1; // Увеличиваем обращение на 1
+                                break; // Прерываем цикл
+                            }
+                        }
+                        Info();
+                        Console.WriteLine("Все страницы процесса {0} в ФП, обращение к {1} странице процесса", process.Name, tmp);
+                        Pause();
+                    }
+                    else
+                    {
+                        SearchCpNull();
+                        if (_numberCp <= _k && _numberCp != 0)
+                        {
+                            foreach (var page in _pageList)
+                            {
+                                if (page.CurrentProcess == null)
+                                {
+                                    page.Сounter += 1;
+                                    page.CurrentProcess = VirtualMemoryList[numberPage];
+                                    HistoriList.Add(VirtualMemoryList[numberPage]);                                    
+                                    VirtualMemoryList.Remove(VirtualMemoryList[numberPage]);
                                     Info();
-                                    Console.WriteLine("\n Обращение к {0} странице, загружаемый блок {1}, Процесс {2}", numberPage + 1, j, _pageList[numberPage].CurrentProcess.Name);
+                                    Console.WriteLine(" Страница {0} процесса {1} загружена", blockR, process.Name);
                                     Pause();
                                     break;
                                 }
@@ -258,80 +345,66 @@ namespace ConsoleApplication1
                         }
                         else
                         {
-                            VirtualMemoryList.Add(_pageList[numberPage].CurrentProcess);
-                            _sizeVp -= 1;
-                            HistoriList.Remove(_pageList[numberPage].CurrentProcess);
-                            _pageList[numberPage].CurrentProcess = null;
-                            int nvm = VirtualMemoryList.Count;
-                            for (int i = 0; i < nvm; i++)
+                            var history = HistoriList.FirstOrDefault();
+                            HistoriList.Remove(HistoriList.FirstOrDefault());
+                            foreach (var page in _pageList)
                             {
-                                if (VirtualMemoryList[i].Name == process.Name && VirtualMemoryList[i].NumberBlock == j)
+                                if (history != null &&
+                                    (page.CurrentProcess.Name == history.Name &&
+                                     page.CurrentProcess.NumberBlock == history.NumberBlock))
                                 {
-                                    _pageList[numberPage].CurrentProcess = VirtualMemoryList[i];
-                                    HistoriList.Add(VirtualMemoryList[i]);
-                                    VirtualMemoryList.Remove(VirtualMemoryList[i]);
-                                    _sizeVp += 1;
+                                    VirtualMemoryList.Add(page.CurrentProcess);
+                                    page.Сounter += 1;
+                                    page.CurrentProcess = VirtualMemoryList[numberPage];
+                                    HistoriList.Add(VirtualMemoryList[numberPage]);
+                                    VirtualMemoryList.Remove(VirtualMemoryList[numberPage]);
                                     Info();
-                                    Console.WriteLine("\n Обращение к {0} странице, загружаемый блок {1}, Процесс {2}", numberPage + 1, j, _pageList[numberPage].CurrentProcess.Name);
+                                    Console.WriteLine("\n Обращение к {0} странице, загружена страница {1}, процесс {2}", numberPage + 1, blockR, page.CurrentProcess.Name);
                                     Pause();
                                     break;
                                 }
                             }
                         }
                     }
-                    else
-                    {
-                        var history = HistoriList.FirstOrDefault();
-                        HistoriList.Remove(HistoriList.FirstOrDefault());
-                        foreach (var myProcess in VirtualMemoryList)
-                        {
-                            if (myProcess.Name == process.Name && myProcess.NumberBlock == block)
-                            {
-                                foreach (var page in _pageList)
-                                {
-                                    if (history != null && (page.CurrentProcess.Name == history.Name && page.CurrentProcess.NumberBlock == history.NumberBlock))
-                                    {
-                                        VirtualMemoryList.Add(page.CurrentProcess);
-                                        _sizeVp -= 1;
-                                        page.CurrentProcess = myProcess;
-                                        HistoriList.Add(myProcess);
-                                        Info();
-                                        Console.WriteLine("\n Обращение к {0} странице, загружаемый блок {1}, Процесс {2}", numberPage + 1, j, _pageList[numberPage].CurrentProcess.Name);
-                                        Pause();
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    timeWorkWhile += 1;
                 }
             }
-            Console.WriteLine("ERROR");
-            Info();
+            Console.Title = "Эмуляция OFF";
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("\n\n !!!ПРОЦЕССОВ БОЛЬШЕ НЕТ!!! ВИРТУАЛЬНАЯ ПАМЯТЬ БУДЕТ ОЧИЩЕНА!!");
+            Console.ForegroundColor = ConsoleColor.Gray;
             Pause();
+
+            VirtualMemoryList.Clear();
+            _sizeVp = Convert.ToInt32(Math.Pow(2, _sizeVpOr) / _pageList[0].Length);
+            Info();
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("\n !!!PROGRAMS END!!! ВИРТУАЛЬНАЯ ПАМЯТЬ ОЧИЩЕНА!!");
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Pause();
+        }
+
+        private static void SearchCpNull()
+        {
+            _numberCp = 0;
+            foreach (var page in _pageList)
+                if (page.CurrentProcess == null)
+                    _numberCp += 1;
         }
 
         private static void Info()
         {
             Console.Clear();
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine("\n =========================================");
-            Console.ForegroundColor = ConsoleColor.Gray;
 
-            float numberCp = 0;
-            foreach (var page in _pageList)
-                if (page.CurrentProcess == null)
-                    numberCp += 1;
+            SearchCpNull();
 
-            Console.WriteLine("\n Колличесво обращений: ");
-            for (int i = 0; i < _pageList.Length; i++)
-                Console.WriteLine(" Cтраница: {0} Обращений: {1}", i+1, _pageList[i].Сounter);
+            TableCount();
 
             Console.WriteLine("\n Физическая память: ");
             // ReSharper disable once CompareOfFloatsByEqualityOperator
-            if (numberCp == _pageList.Length)
+            if (_numberCp == _pageList.Length)
             {
-                Console.WriteLine(" Текущих процессов НЕТ!");
+                Console.WriteLine(" Память пуста!");
             }
             else
             {
@@ -344,54 +417,120 @@ namespace ConsoleApplication1
                         Console.WriteLine(" null");
                 }
             }
-                
-
             Console.WriteLine("\n Список процессов в очереди: ");
             foreach (var myProcess in ProcessList)
-                Console.WriteLine(" Имя: {0} Время работы: {1}", myProcess.Name, myProcess.NumberBlock);
-           
+                Console.WriteLine(" Имя: {0} Время работы: {1}", myProcess.Name, myProcess.TimeWork);
             if (ProcessList.Count == 0)
                 Console.WriteLine(" Процессов НЕТ!");
-
             Console.WriteLine("\n История: ");
             foreach (var myProcess in HistoriList)
                 if (myProcess != null)
                     Console.WriteLine(" Имя: {0} Номер страницы: {1}", myProcess.Name, myProcess.NumberBlock);
-            
             if (HistoriList.Count == 0)
                 Console.WriteLine(" Истории НЕТ!");
-
-            Console.WriteLine("\n Витруальная память: ");
-            foreach (var myProcess in VirtualMemoryList)
-                Console.WriteLine(" Имя: {0} | Cтраница: {1}", myProcess.Name, myProcess.NumberBlock);
-            
-            if (VirtualMemoryList.Count == 0)
-                Console.WriteLine(" Процессов НЕТ!");
-
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine("\n =========================================");
+            Console.ForegroundColor = ConsoleColor.DarkGreen;
+            Console.WriteLine("\n ═══════════════════════════════════════════");
             Console.ForegroundColor = ConsoleColor.Gray;
+            Console.WriteLine("\n Виртуальная память: ");
+            Console.WriteLine(" Количество ВП: {0} байт", Math.Pow(2, _sizeVpOr));
+            Console.WriteLine(" Количество страниц ВП: {0} ", Math.Pow(2, _sizeVpOr) / _pageList[0].Length);
+            Console.ForegroundColor = ConsoleColor.DarkYellow;
+            Console.WriteLine("\n ═══════════════════════════════════════════");
+            Console.ForegroundColor = ConsoleColor.Gray;
+            foreach (var myProcess in VirtualMemoryList)
+                Console.WriteLine(" Имя: {0} ║ Cтраница: {1}", myProcess.Name, myProcess.NumberBlock);
+            if (VirtualMemoryList.Count == 0)
+                Console.WriteLine("\n Память пуста!");
+            Console.ForegroundColor = ConsoleColor.DarkGreen;
+            Console.WriteLine("\n ═══════════════════════════════════════════");
+            Console.ForegroundColor = ConsoleColor.Gray;
+        }
 
-            Console.WriteLine("\n Колличество ФП: {0} байт", _memory.Length);
+        private static void TableCount()
+        {
+            SearchCpNull();
+            Console.ForegroundColor = ConsoleColor.DarkGreen;
+            Console.WriteLine("\n ═══════════════════════════════════════════");
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.WriteLine("\n\t\tФизическая память:");
+            Console.WriteLine("\n Количество обращений");
 
-            Console.WriteLine(" Колличество ВП: {0} байт", Math.Pow(2,_sizeVpOr));
+            int table = 0;
+            Console.Write(" ╔");
+            for (int i = 1; i <= _pageList.Length * 3; i++)
+            {
+                table += 1;
+                Console.Write("═");
+                if (table == 3)
+                {
+                    if (i != _pageList.Length * 3)
+                    {
+                        Console.Write("╦");
+                        table = 0;
+                    }
+                }
+            }
+            Console.Write("╗\n");
 
-            Console.WriteLine(" Колличество страниц ФП: {0} ", _pageList.Length);
+            Console.Write(" ║");
+            for (int i = 0; i < _pageList.Length; i++)
+            {
+                Console.Write("{0,3}║", i + 1);
+            }
+            Console.Write(" Страницы");
+            table = 0;
+            Console.Write("\n ╠");
+            for (int i = 1; i <= _pageList.Length * 3; i++)
+            {
+                table += 1;
+                Console.Write("═");
+                if (table == 3)
+                {
+                    if (i != _pageList.Length * 3)
+                    {
+                        Console.Write("╬");
+                        table = 0;
+                    }
+                }
+            }
+            Console.Write("╣\n");
 
-            Console.WriteLine(" Колличество страниц ВП: {0} ", Math.Pow(2,_sizeVpOr)/_pageList[0].Length);
-
+            Console.Write(" ║");
+            for (int i = 0; i < _pageList.Length; i++)
+            {
+                Console.Write("{0,3}║", _pageList[i].Сounter);
+            }
+            Console.Write(" Обращения");
+            table = 0;
+            Console.Write("\n ╚");
+            for (int i = 1; i <= _pageList.Length * 3; i++)
+            {
+                table += 1;
+                Console.Write("═");
+                if (table == 3)
+                {
+                    if (i != _pageList.Length * 3)
+                    {
+                        Console.Write("╩");
+                        table = 0;
+                    }
+                }
+            }
+            Console.Write("╝\n");
+            Console.WriteLine("\n Количество ФП: {0} байт", _memory.Length);
+            Console.WriteLine(" Количество страниц ФП: {0} ", _pageList.Length);
             Console.WriteLine(" Размер страниц: {0} байт", _pageList[0].Length);
-
-            Console.WriteLine(" Число свободных страниц в ФП: {0}%", (numberCp / _pageList.Length) * 100);
-
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine("\n =========================================");
+            Console.WriteLine(" Число свободных страниц в ФП: {0}%", (_numberCp / _pageList.Length) * 100);
+            Console.ForegroundColor = ConsoleColor.DarkGreen;
+            Console.WriteLine("\n ═══════════════════════════════════════════");
             Console.ForegroundColor = ConsoleColor.Gray;
         }
 
         private static void LoadFile()
         {
+            Console.Title = "Загрузка из файла";
             Console.Clear();
+            var rand = new Random();
             var reader = new StreamReader("process_list.txt");
             while (true)
             {
@@ -401,27 +540,32 @@ namespace ConsoleApplication1
                 var lines = s.Split(new[] { ' ' });
                 int fullsize = Convert.ToInt32(lines[1]) / _sizePage;
                 int rest = Convert.ToInt32(lines[1]) % _sizePage;
-                if (_sizeVp >= fullsize + rest)
+                int restTmp = 0;
+                if (rest > 0)
+                    restTmp = 1;
+                if (_sizeVp >= fullsize + restTmp)
                 {
                     int i;
-                    for (i = 0; i < fullsize; i++)
+                    for (i = 1; i <= fullsize; i++)
                     {
-                        VirtualMemoryList.Add(new MyProcess { Name = lines[0], NumberBlock = i + 1 });
+                        VirtualMemoryList.Add(new MyProcess { Name = lines[0], NumberBlock = i });
                         _sizeVp -= 1;
+                        if (fullsize - i == 0 && rest == 0)
+                        {
+                            ProcessList.Enqueue(new MyProcess { Name = lines[0], Size = Convert.ToInt32(lines[1]), NumberBlock = fullsize, TimeWork = rand.Next(1, 10)});
+                        }
                     }
                     if (rest != 0)
                     {
-                        VirtualMemoryList.Add(new MyProcess { Name = lines[0], NumberBlock = i + 1 });
+                        VirtualMemoryList.Add(new MyProcess { Name = lines[0], NumberBlock = i });
+                        ProcessList.Enqueue(new MyProcess { Name = lines[0], Size = Convert.ToInt32(lines[1]), NumberBlock = fullsize + 1, TimeWork = rand.Next(1, 10) });
                         _sizeVp -= 1;
                     }
-                    ProcessList.Enqueue(new MyProcess { Name = lines[0], Size = Convert.ToInt32(lines[1]), NumberBlock = fullsize + 1 });
-                    Console.WriteLine(" {0} добавлен и разбит на {1} страницы из них {2} по {3}, и 1 блок размерои {4}", lines[0], fullsize + 1, fullsize, _sizePage, rest);
-                    System.Threading.Thread.Sleep(500);
+                    Console.WriteLine(" {0} добавлен и разбит на {1} страницы из них {2} по {3}, и 1 страница размером {4}", lines[0], fullsize + restTmp, fullsize, _sizePage, rest);
                 }
                 else
                 {
                     Console.WriteLine("\n ERROR: Недостаточно памяти под процесс {0}", lines[0]);
-                    System.Threading.Thread.Sleep(500);
                 }
 
             }
@@ -436,5 +580,4 @@ namespace ConsoleApplication1
             Console.ReadKey(true);
         }
     }
-
 }
