@@ -76,8 +76,11 @@ namespace FileSystem
 
             var FD = new FileEntry(Convert.ToBoolean(lines[0]), lines[1], tmp, null);
 
-            fileEntry.Entires.Add(FD);
-            
+            if (fileEntry != null)
+                fileEntry.Entires.Add(FD);
+            else
+                root = FD;
+
             s = f.ReadLine();
 
             if (s == "STARTDIR")
