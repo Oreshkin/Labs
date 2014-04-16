@@ -103,6 +103,8 @@
             this.Controls.Add(this.groupBox1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
             this.Name = "Formating";
+            this.ShowInTaskbar = false;
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Formating";
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
@@ -112,7 +114,7 @@
 
         #endregion
 
-        private System.Windows.Forms.Label Size;
+        private new System.Windows.Forms.Label Size;
         private System.Windows.Forms.Label SizeCluster;
         private System.Windows.Forms.TextBox SizeBox;
         private System.Windows.Forms.TextBox SizeClusterBox;

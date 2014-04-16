@@ -15,10 +15,26 @@ namespace FileSystem
         private int _clusterSize;
         private int _clusterCount;
         private string _fileName;
+        private FileEntry _CurrentDir;
         private Cluster[] clusters;
         private int[] bitMask;
 
-        List<FileEntry> Entries = new List<FileEntry>();
+        private FileEntry root = new FileEntry(true, "\\" , new int[] {0}, null );
+
+        public void SetCurDir(FileEntry Dir)
+        {
+            _CurrentDir = Dir;
+        }
+
+        public FileEntry GetCurDir()
+        {
+            if (_CurrentDir == null)
+            {
+                return root;
+            }
+            return _CurrentDir;
+        }
+
 
         public FileSystem(string fileName)
         {
@@ -34,16 +50,45 @@ namespace FileSystem
             {
                 clusters[i] = new Cluster();
             }
+            clusters[0].Data = "DIR";
             bitMask = new int[_clusterCount / _clusterSize];
-            for (int i = 0; i < bitMask.Length; i++)
+            bitMask[0] = 1;
+            for (int i = 1; i < bitMask.Length; i++)
             {
                 bitMask[i] = 0;
             }
             Serialize();
         }
 
+
+
+        private void Deserialize(StreamReader f, string s)
+        {
+            var lines = s.Split(new[] { '|' });
+            var lines_3 = lines[2].Split(new[] { ';' });
+
+            var tmp = new int[Convert.ToInt32(lines_3.Length)];
+
+            for (int j = 0; j < tmp.Length; j++)
+            {
+                tmp[j] = Convert.ToInt32(lines_3[j]);
+            }
+            root.Entires.Add(new FileEntry(Convert.ToBoolean(lines[0]), lines[1], tmp, null));
+            s = f.ReadLine();
+
+            if (s == "STARTDIR")
+            {
+                while (s == "ENDDIR")
+                {
+                    Deserialize(f, s);
+                    s = f.ReadLine();
+                }
+            }
+        }
+
         void Deserialize()
         {
+            int i;
             var reader = new StreamReader("1.txt");
             string s = reader.ReadLine(); ;
             while (s != "Files&Dirs")
@@ -64,21 +109,25 @@ namespace FileSystem
                 s = reader.ReadLine();
             }
             clusters = new Cluster[_clusterCount / _clusterSize];
-            while (s != "Files&Dirs_END")
+            for (i = 0; i < clusters.Length; i++)
             {
-                //test not work
-                s = reader.ReadLine();
+                clusters[i] = new Cluster();
             }
             s = reader.ReadLine();
-            int i;
+            while (s != "Files&Dirs_END")
+            {
+                Deserialize(reader, s);
+            }
+            s = reader.ReadLine();
+            
             while (s != "DataSegment")
             {
                 s = reader.ReadLine();
                 var lines = s.Split(new[] { ' ' });
-                bitMask = new int[lines.Length];
-                for (i = 0; i < bitMask.Length; i++)
+                bitMask = new int[lines.Length - 1];
+                for (i = 0; i < bitMask.Length - 1; i++)
                 {
-                    bitMask[i] = Convert.ToInt32(lines[i]);
+                        bitMask[i] = Convert.ToInt32(lines[i]);                        
                 }
                 s = reader.ReadLine();
             }
@@ -95,6 +144,33 @@ namespace FileSystem
             reader.Close();
         }
 
+        private void Serialize(FileEntry fileEntry, StreamWriter f)
+        {
+            // header
+            f.Write("");
+            f.Write("{0}|{1}|", fileEntry.IsDir, fileEntry.Name);
+            for (int i = 0; i < fileEntry.Clusters.Length; i++)
+            {
+                f.Write("{0}", fileEntry.Clusters[i]);
+                if (fileEntry.Clusters.Length - i != 1)
+                {
+                    f.Write(";");
+                }
+            }
+            f.WriteLine("");
+            if (fileEntry.IsDir)
+            {
+                // tokenstart
+                f.WriteLine("STARTDIR");
+                foreach (var file in fileEntry.Entires)
+                {
+                    Serialize(file, f);
+                }
+                f.WriteLine("ENDDIR");
+                // tokenend
+            }
+        }
+
         void Serialize()
         {
             var f = new StreamWriter("1.txt");
@@ -106,18 +182,7 @@ namespace FileSystem
             f.WriteLine("Counter_Clusters:{0}", _clusterCount / _clusterSize);
 
             f.WriteLine("Files&Dirs");
-            foreach (var fileEntry in Entries)
-            {
-                f.Write("{0}|{1}|", fileEntry.IsDir, fileEntry.Name);
-                for (int i = 0; i < fileEntry.Clusters.Length; i++)
-                {
-                    f.WriteLine("{0}", fileEntry.Clusters[i]);
-                    if (fileEntry.Clusters.Length - i != 1)
-                    {
-                        f.Write(";");
-                    }
-                }
-            }
+            Serialize(root, f);
             f.WriteLine("Files&Dirs_END");
 
             f.WriteLine("BitMask");
@@ -142,7 +207,7 @@ namespace FileSystem
             f.WriteLine("DataSegment_END");
 
             f.Close();
-        }
+        }    
 
         public void CreateFile(string filename)
         {
@@ -152,7 +217,7 @@ namespace FileSystem
                 {
                     var tmp = new int[1];
                     tmp[0] = i;
-                    Entries.Add(new FileEntry(false, filename, tmp));
+                    GetCurDir().Entires.Add(new FileEntry(false, filename, tmp, GetCurDir()));
                     bitMask[i] = 2;
                     break;
                 }
@@ -168,18 +233,29 @@ namespace FileSystem
                 {
                     var tmp = new int[1];
                     tmp[0] = i;
-                    Entries.Add(new FileEntry(true, dirname, tmp));
-                    clusters[i].Data = "DIR";
+                    GetCurDir().Entires.Add(new FileEntry(true, dirname, tmp, GetCurDir()));
                     bitMask[i] = 1;
+                    
+                    /*
+                    var tmp1 = root.Entires.LastOrDefault();
+                    tmp1.Entires.Add(new FileEntry(false, dirname, tmp));
+                    //*/
+                    
                     break;
                 }
             }
+
             Serialize();
         }
 
         public string GetSizeClusters()
         {
             return Convert.ToString(_clusterSize);
+        }
+
+        public Cluster[] GetClusters()
+        {
+            return clusters;
         }
 
         public string GetSize()
@@ -199,64 +275,55 @@ namespace FileSystem
 
         public string GetFreeMemory()
         {
-
-            using (Graphics g = Main.panel1.CreateGraphics())
-            {
-                Pen pen = new Pen(Color.Black, 1);
-                    
-                Brush brush = new SolidBrush(Color.Aqua);
-                int x = 0;
-                int y = 0;
-                int c = 0;
-                bool exit = false;
-                foreach (var cluster in clusters)
-                {
-                    g.DrawRectangle(pen, x, y, 10, 10);
-                    x += 12;
-                    c += 1;
-                    if (c == 50)
-                    {
-                        c = 0;
-                        x = 0;
-                        y += 12;
-                    }
-                }
-
-                //g.DrawRectangle(pen, 100, 100, 100, 200);
-                //g.FillRectangle( brush,  );
-
-                pen.Dispose();
-            }
-
-
             var tmp = Convert.ToInt32(GetFreeClusters()) * 4;
             return Convert.ToString(tmp);
         }
 
+        public int[] GetBitBock()
+        {
+            return bitMask;
+        }
+
         public void Loaging()
         {
-            Deserialize();
+            //Deserialize();
         }
 
 
+        public void Clear()
+        {
+            root.Entires.Clear();
+        }
+
+        public string GetClusterData(int clusterNum)
+        {
+            if (clusterNum > clusters.Length || clusterNum < 0)
+            {
+                return null;
+            }
+            return clusters[clusterNum].Data;
+        }
     }
 
-    internal class FileEntry
+    public class FileEntry
     {
         public bool IsDir;
         public string Name;
         public int[] Clusters;
         public List<FileEntry> Entires = new List<FileEntry>();
 
-        public FileEntry(bool isDir, string name, int[] clusters)
+        public FileEntry Parent;
+
+        public FileEntry(bool isDir, string name, int[] clusters, FileEntry parent )
         {
             IsDir = isDir;
             Name = name;
             Clusters = clusters;
+            Parent = parent;
         }
     }
 
-    internal class Cluster
+    public class Cluster
     {
         public string Data;
     }
