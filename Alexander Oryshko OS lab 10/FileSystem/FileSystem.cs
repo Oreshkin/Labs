@@ -62,7 +62,7 @@ namespace FileSystem
 
 
 
-        private void Deserialize(StreamReader f, string s)
+        private void Deserialize(FileEntry fileEntry, StreamReader f, string s)
         {
             var lines = s.Split(new[] { '|' });
             var lines_3 = lines[2].Split(new[] { ';' });
@@ -73,21 +73,26 @@ namespace FileSystem
             {
                 tmp[j] = Convert.ToInt32(lines_3[j]);
             }
-            root.Entires.Add(new FileEntry(Convert.ToBoolean(lines[0]), lines[1], tmp, null));
+
+            var FD = new FileEntry(Convert.ToBoolean(lines[0]), lines[1], tmp, null);
+
+            fileEntry.Entires.Add(FD);
+            
             s = f.ReadLine();
 
             if (s == "STARTDIR")
             {
-                while (s == "ENDDIR")
+                s = f.ReadLine();
+                while (s != "ENDDIR")
                 {
-                    Deserialize(f, s);
-                    s = f.ReadLine();
+                    Deserialize(FD, f, s);
                 }
             }
         }
 
         void Deserialize()
         {
+            FileEntry root = new FileEntry(true, "\\", new int[] { 0 }, null);
             int i;
             var reader = new StreamReader("1.txt");
             string s = reader.ReadLine(); ;
@@ -116,7 +121,7 @@ namespace FileSystem
             s = reader.ReadLine();
             while (s != "Files&Dirs_END")
             {
-                Deserialize(reader, s);
+                Deserialize(null, reader, s);
             }
             s = reader.ReadLine();
             
@@ -286,7 +291,7 @@ namespace FileSystem
 
         public void Loaging()
         {
-            //Deserialize();
+            Deserialize();
         }
 
 
