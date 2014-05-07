@@ -5,6 +5,5 @@ namespace ConsoleApplication1
         public string Name;
         public int Size;
         public int NumberBlock;
-        public int TimeWork;
     }
 }
